@@ -97,13 +97,7 @@ def generate_with_fish_speech(
     top_p: float = 0.8,
     repetition_penalty: float = 1.2,
 ):
-    """
-    Generate speech using Fish Speech with voice cloning.
-
-    NOTE: The Fish Speech API may change between versions.
-    This script targets fish-speech >= 1.5. If the API has changed,
-    check https://github.com/fishaudio/fish-speech for the latest usage.
-    """
+    """Generate speech using official fish-speech CLI via subprocess."""
     device = check_gpu()
 
     print(f"\nModel: {model_name}")
@@ -114,32 +108,35 @@ def generate_with_fish_speech(
     print()
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    print("Loading model (first run will download ~3-4 GB)...")
+    print("Starting generation (first run will download ~3-4 GB)...")
     start_time = time.time()
 
-    # ---- Fish Speech inference ----
-    # The exact API depends on the fish-speech version.
-    # Below is the general approach; consult the project README for details.
-    #
-    # Fish Speech works in two stages:
-    # 1. Text -> Semantic tokens (text2semantic model)
-    # 2. Semantic tokens -> Audio waveform (VQGAN decoder)
-    #
-    # The high-level TTSInference API wraps both stages.
+    # ✅ Запускаем официальный модуль fish-speech через subprocess
+    import subprocess
+    import sys
+
+    # Путь к папке fish-speech (должна лежать рядом с generate.py)
+    fish_speech_dir = Path(__file__).parent / "fish-speech"
+
+    cmd = [
+        sys.executable, "-m", "tools.inference",
+        "--text", text,
+        "--reference", str(reference_audio),
+        "--output", str(output_path),
+        "--device", device,
+        "--temperature", str(temperature),
+        "--top-p", str(top_p),
+        "--repetition-penalty", str(repetition_penalty),
+    ]
 
     try:
-        # Try the high-level API first (fish-speech >= 1.5)
-        tts = TTSInference(model=model_name, device=device)
-
-        print("Generating audio...")
-        audio = tts.generate(
-            text=text,
-            reference_audio=str(reference_audio),
-            temperature=temperature,
-            top_p=top_p,
-            repetition_penalty=repetition_penalty,
-        )
+        # Выполняем команду из директории fish-speech
+        result = subprocess.run(cmd, check=True, cwd=str(fish_speech_dir))
+        print(f"\n✅ Done in {time.time() - start_time:.1f}s!")
+        print(f"Output saved to: {output_path}")
+    except subprocess.CalledProcessError as e:
+        print(f"\n❌ Generation failed. Check logs above.")
+        sys.exit(1)
 
         # Save output
         import soundfile as sf
