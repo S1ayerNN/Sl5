@@ -17,24 +17,30 @@ import sys
 import time
 from pathlib import Path
 
+# 🔥 ИМПОРТ PYTORCH (верните его!)
 try:
-    # Сначала проверим, что базовый модуль доступен
+    import torch
+except ImportError:
+    print("Error: PyTorch is not installed.")
+    print("Install with CUDA 12.8 support:")
+    print("  pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu128")
+    sys.exit(1)
+
+# ✅ ВАШ ИСПРАВЛЕННЫЙ БЛОК FISH-SPEECH
+try:
     import fish_speech
     
-    # Попробуем импортировать основной класс для инференса
     try:
         from fish_speech.inference import TTSInference
         print("✓ Using TTSInference API")
     except ImportError:
-        # Альтернативный путь для других версий
         try:
             from fish_speech.models.vqgan.inference import VQGANInference
             from fish_speech.models.text2semantic.inference import Text2SemanticInference
             print("✓ Using two-stage inference API")
         except ImportError:
-            # Последняя попытка: запустить через модуль tools
             print("✓ Using tools.inference module")
-            TTSInference = None  # Будем использовать subprocess или CLI
+            TTSInference = None
             
 except ImportError as e:
     print(f"Error: Cannot import fish_speech module: {e}")
@@ -52,7 +58,8 @@ def check_gpu():
     """Check GPU availability and print info."""
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
-        gpu_mem = torch.cuda.get_device_properties(0).total_mem / 1024**3
+        # 🔧 Исправлено: total_memory вместо total_mem
+        gpu_mem = torch.cuda.get_device_properties(0).total_memory / 1024**3
         print(f"GPU: {gpu_name} ({gpu_mem:.1f} GB)")
         return "cuda"
     else:
