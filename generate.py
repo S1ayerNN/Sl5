@@ -18,25 +18,29 @@ import time
 from pathlib import Path
 
 try:
-    import torch
-except ImportError:
-    print("Error: PyTorch is not installed.")
-    print("Install with CUDA 12.8 support:")
-    print("  pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu128")
-    sys.exit(1)
-
-try:
-    from fish_speech.inference import TTSInference
-except ImportError:
+    # Сначала проверим, что базовый модуль доступен
+    import fish_speech
+    
+    # Попробуем импортировать основной класс для инференса
     try:
-        # Alternative import path depending on fish-speech version
-        from fish_speech.models.vqgan.inference import VQGANInference
-        from fish_speech.models.text2semantic.inference import Text2SemanticInference
+        from fish_speech.inference import TTSInference
+        print("✓ Using TTSInference API")
     except ImportError:
-        print("Error: fish-speech is not installed.")
-        print("Install with: pip install fish-speech")
-        print("Or clone: git clone https://github.com/fishaudio/fish-speech.git && pip install -e .")
-        sys.exit(1)
+        # Альтернативный путь для других версий
+        try:
+            from fish_speech.models.vqgan.inference import VQGANInference
+            from fish_speech.models.text2semantic.inference import Text2SemanticInference
+            print("✓ Using two-stage inference API")
+        except ImportError:
+            # Последняя попытка: запустить через модуль tools
+            print("✓ Using tools.inference module")
+            TTSInference = None  # Будем использовать subprocess или CLI
+            
+except ImportError as e:
+    print(f"Error: Cannot import fish_speech module: {e}")
+    print("Make sure you installed it with:")
+    print("  pip install -e .  (from the fish-speech directory)")
+    sys.exit(1)
 
 
 DEFAULT_MODEL = "fishaudio/fish-speech-1.5"
