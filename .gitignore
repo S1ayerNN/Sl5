@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+env/
+
+# Audio files (samples and output are local-only)
+samples/*.mp3
+samples/*.wav
+samples/*.flac
+samples/*.ogg
+output/*.wav
+output/*.mp3
+output/*.flac
+
+# Models cache
+*.pt
+*.pth
+*.bin
+*.safetensors
+checkpoints/
+
+# HuggingFace cache
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
